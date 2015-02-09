@@ -60,7 +60,7 @@ public class FinderPatternFinder {
 
   public FinderPatternFinder(BitMatrix image, ResultPointCallback resultPointCallback) {
     this.image = image;
-    this.possibleCenters = new ArrayList<>();
+    this.possibleCenters = new ArrayList<FinderPattern>();
     this.crossCheckStateCount = new int[5];
     this.resultPointCallback = resultPointCallback;
   }

@@ -61,7 +61,7 @@ public final class PDF417BlackBox4TestCase extends AbstractBlackBoxTestCase {
 
   private final MultipleBarcodeReader barcodeReader = new PDF417Reader();
 
-  private final List<TestResult> testResults = new ArrayList<>();
+  private final List<TestResult> testResults = new ArrayList<TestResult>();
 
   public PDF417BlackBox4TestCase() {
     super("src/test/resources/blackbox/pdf417-4", null, BarcodeFormat.PDF_417);
@@ -102,7 +102,7 @@ public final class PDF417BlackBox4TestCase extends AbstractBlackBoxTestCase {
       }
 
       for (int x = 0; x < testCount; x++) {
-        List<Result> results = new ArrayList<>();
+        List<Result> results = new ArrayList<Result>();
         for (Path imageFile : testImageGroup.getValue()) {
           BufferedImage image = ImageIO.read(imageFile.toFile());
           float rotation = testResults.get(x).getRotation();
@@ -204,7 +204,7 @@ public final class PDF417BlackBox4TestCase extends AbstractBlackBoxTestCase {
   }
 
   private Result[] decode(BinaryBitmap source, boolean tryHarder) throws ReaderException {
-    Map<DecodeHintType,Object> hints = new EnumMap<>(DecodeHintType.class);
+    Map<DecodeHintType,Object> hints = new EnumMap<DecodeHintType,Object>(DecodeHintType.class);
     if (tryHarder) {
       hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
     }
@@ -213,13 +213,13 @@ public final class PDF417BlackBox4TestCase extends AbstractBlackBoxTestCase {
   }
 
   private Map<String,List<Path>> getImageFileLists() throws IOException {
-    Map<String,List<Path>> result = new HashMap<>();
+    Map<String,List<Path>> result = new HashMap<String,List<Path>>();
     for (Path file : getImageFiles()) {
       String testImageFileName = file.getFileName().toString();
       String fileBaseName = testImageFileName.substring(0, testImageFileName.indexOf('-'));
       List<Path> files = result.get(fileBaseName);
       if (files == null) {
-        files = new ArrayList<>();
+        files = new ArrayList<Path>();
         result.put(fileBaseName, files);
       }
       files.add(file);

@@ -57,7 +57,7 @@ public final class QRCodeMultiReader extends QRCodeReader implements MultipleBar
 
   @Override
   public Result[] decodeMultiple(BinaryBitmap image, Map<DecodeHintType,?> hints) throws NotFoundException {
-    List<Result> results = new ArrayList<>();
+    List<Result> results = new ArrayList<Result>();
     DetectorResult[] detectorResults = new MultiDetector(image.getBlackMatrix()).detectMulti(hints);
     for (DetectorResult detectorResult : detectorResults) {
       try {
@@ -111,8 +111,8 @@ public final class QRCodeMultiReader extends QRCodeReader implements MultipleBar
     }
 
     // it is, second, split the lists and built a new result list
-    List<Result> newResults = new ArrayList<>();
-    List<Result> saResults = new ArrayList<>();
+    List<Result> newResults = new ArrayList<Result>();
+    List<Result> saResults = new ArrayList<Result>();
     for (Result result : results) {
       newResults.add(result);
       if (result.getResultMetadata().containsKey(ResultMetadataType.STRUCTURED_APPEND_SEQUENCE)) {
@@ -155,7 +155,7 @@ public final class QRCodeMultiReader extends QRCodeReader implements MultipleBar
     }
     Result newResult = new Result(concatedText.toString(), newRawBytes, NO_POINTS, BarcodeFormat.QR_CODE);
     if (byteSegmentLength > 0) {
-      Collection<byte[]> byteSegmentList = new ArrayList<>();
+      Collection<byte[]> byteSegmentList = new ArrayList<byte[]>();
       byteSegmentList.add(newByteSegment);
       newResult.putMetadata(ResultMetadataType.BYTE_SEGMENTS, byteSegmentList);
     }
@@ -166,8 +166,8 @@ public final class QRCodeMultiReader extends QRCodeReader implements MultipleBar
   private static final class SAComparator implements Comparator<Result>, Serializable {
     @Override
     public int compare(Result a, Result b) {
-      int aNumber = (int) (a.getResultMetadata().get(ResultMetadataType.STRUCTURED_APPEND_SEQUENCE));
-      int bNumber = (int) (b.getResultMetadata().get(ResultMetadataType.STRUCTURED_APPEND_SEQUENCE));
+      int aNumber = (Integer) (a.getResultMetadata().get(ResultMetadataType.STRUCTURED_APPEND_SEQUENCE));
+      int bNumber = (Integer) (b.getResultMetadata().get(ResultMetadataType.STRUCTURED_APPEND_SEQUENCE));
       if (aNumber < bNumber) {
         return -1;
       }

@@ -80,9 +80,9 @@ import javax.servlet.http.Part;
  * @author Sean Owen
  */
 @MultipartConfig(
-    maxFileSize = 10_000_000,
-    maxRequestSize = 10_000_000,
-    fileSizeThreshold = 1_000_000,
+    maxFileSize = 10000000,
+    maxRequestSize = 10000000,
+    fileSizeThreshold = 1000000,
     location = "/tmp")
 @WebServlet("/w/decode")
 public final class DecodeServlet extends HttpServlet {
@@ -90,18 +90,18 @@ public final class DecodeServlet extends HttpServlet {
   private static final Logger log = Logger.getLogger(DecodeServlet.class.getName());
 
   // No real reason to let people upload more than a 10MB image
-  private static final long MAX_IMAGE_SIZE = 10_000_000L;
+  private static final long MAX_IMAGE_SIZE = 10000000L;
   // No real reason to deal with more than maybe 10 megapixels
-  private static final int MAX_PIXELS = 10_000_000;
+  private static final int MAX_PIXELS = 10000000;
   private static final byte[] REMAINDER_BUFFER = new byte[32768];
   private static final Map<DecodeHintType,Object> HINTS;
   private static final Map<DecodeHintType,Object> HINTS_PURE;
 
   static {
-    HINTS = new EnumMap<>(DecodeHintType.class);
+    HINTS = new EnumMap<DecodeHintType,Object>(DecodeHintType.class);
     HINTS.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
     HINTS.put(DecodeHintType.POSSIBLE_FORMATS, EnumSet.allOf(BarcodeFormat.class));
-    HINTS_PURE = new EnumMap<>(HINTS);
+    HINTS_PURE = new EnumMap<DecodeHintType,Object>(HINTS);
     HINTS_PURE.put(DecodeHintType.PURE_BARCODE, Boolean.TRUE);
   }
 
@@ -215,7 +215,9 @@ public final class DecodeServlet extends HttpServlet {
       return;
     }
 
-    try (InputStream is = connection.getInputStream()) {
+    InputStream is = null;
+    try {
+      is = connection.getInputStream();
       try {
         if (connection.getResponseCode() != HttpServletResponse.SC_OK) {
           log.info("Unsuccessful return code: " + connection.getResponseCode());
@@ -236,8 +238,11 @@ public final class DecodeServlet extends HttpServlet {
     } catch (IOException ioe) {
       log.info(ioe.toString());
       errorResponse(request, response, "badurl");
-    } finally {
+    } finally {  
       connection.disconnect();
+      if (is != null) {
+        is.close();
+      }
     }
 
   }
@@ -248,7 +253,10 @@ public final class DecodeServlet extends HttpServlet {
       while ((available = is.available()) > 0) {
         is.read(REMAINDER_BUFFER, 0, available); // don't care about value, or collision
       }
-    } catch (IOException | IndexOutOfBoundsException ioe) {
+    } catch (IOException e) {
+      // sun.net.www.http.ChunkedInputStream.read is throwing IndexOutOfBoundsException
+      // continue
+    } catch (IndexOutOfBoundsException e) {
       // sun.net.www.http.ChunkedInputStream.read is throwing IndexOutOfBoundsException
       // continue
     }
@@ -277,8 +285,14 @@ public final class DecodeServlet extends HttpServlet {
       errorResponse(request, response, "badimage");
     } else {
       log.info("Decoding uploaded file");
-      try (InputStream is = fileUploadPart.getInputStream()) {
+      InputStream is = null;
+      try {
+        is = fileUploadPart.getInputStream();
         processStream(is, request, response);
+      } finally {
+        if (is != null) {
+          is.close();
+        }
       }
     }
   }
@@ -290,12 +304,23 @@ public final class DecodeServlet extends HttpServlet {
     BufferedImage image;
     try {
       image = ImageIO.read(is);
-    } catch (IOException | CMMException | IllegalArgumentException ioe) {
+    } catch (IOException ioe) {
+      log.info(ioe.toString());
+      // Have seen these in some logs
+      errorResponse(request, response, "badimage");
+      return;
+    } catch (CMMException ioe) {
+      log.info(ioe.toString());
+      // Have seen these in some logs
+      errorResponse(request, response, "badimage");
+      return;
+    } catch (IllegalArgumentException ioe) {
       log.info(ioe.toString());
       // Have seen these in some logs
       errorResponse(request, response, "badimage");
       return;
     }
+    
     if (image == null) {
       errorResponse(request, response, "badimage");
       return;
@@ -386,10 +411,16 @@ public final class DecodeServlet extends HttpServlet {
     if (minimalOutput) {
       response.setContentType(MediaType.PLAIN_TEXT_UTF_8.toString());
       response.setCharacterEncoding(StandardCharsets.UTF_8.name());
-      try (Writer out = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8)) {
+      Writer out = null;
+      try {
+        out = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8);
         for (Result result : results) {
           out.write(result.getText());
           out.write('\n');
+        }
+      } finally {
+        if (out != null) {
+          out.close();
         }
       }
     } else {

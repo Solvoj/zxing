@@ -70,12 +70,15 @@ public final class ChartServlet extends HttpServlet {
     ChartServletRequestParameters parameters;
     try {
       parameters = doParseParameters(request, isPost);
-    } catch (IllegalArgumentException | NullPointerException e) {
+    } catch (IllegalArgumentException e) {
+      response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.toString());
+      return;
+    } catch (NullPointerException e) {
       response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.toString());
       return;
     }
 
-    Map<EncodeHintType,Object> hints = new EnumMap<>(EncodeHintType.class);
+    Map<EncodeHintType,Object> hints = new EnumMap<EncodeHintType,Object>(EncodeHintType.class);
     hints.put(EncodeHintType.MARGIN, parameters.getMargin());
     if (!StandardCharsets.ISO_8859_1.equals(parameters.getOutputEncoding())) {
       // Only set if not QR code default

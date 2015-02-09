@@ -56,7 +56,7 @@ public final class BitArrayBuilderTest extends Assert {
   }
 
   private static BitArray buildBitArray(int[][] pairValues) {
-    List<ExpandedPair> pairs = new ArrayList<>();
+    List<ExpandedPair> pairs = new ArrayList<ExpandedPair>();
     for(int i = 0; i < pairValues.length; ++i){
       int [] pair = pairValues[i];
 

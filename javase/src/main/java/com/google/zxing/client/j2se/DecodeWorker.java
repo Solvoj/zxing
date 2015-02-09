@@ -115,7 +115,7 @@ final class DecodeWorker implements Callable<Integer> {
       name = name.substring(0, pos) + ".txt";
     }
     Path dumpFile = input.getParent().resolve(name);
-    Collection<String> resultTexts = new ArrayList<>();
+    Collection<String> resultTexts = new ArrayList<String>();
     for (Result result : results) {
       resultTexts.add(result.getText());
     }

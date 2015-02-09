@@ -286,7 +286,7 @@ public final class CameraConfigurationUtils {
     }
 
     // Sort by size, descending
-    List<Camera.Size> supportedPreviewSizes = new ArrayList<>(rawSupportedSizes);
+    List<Camera.Size> supportedPreviewSizes = new ArrayList<Camera.Size>(rawSupportedSizes);
     Collections.sort(supportedPreviewSizes, new Comparator<Camera.Size>() {
       @Override
       public int compare(Camera.Size a, Camera.Size b) {

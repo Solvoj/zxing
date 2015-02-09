@@ -75,7 +75,7 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
     this.testBase = testBase;
     this.barcodeReader = barcodeReader;
     this.expectedFormat = expectedFormat;
-    testResults = new ArrayList<>();
+    testResults = new ArrayList<TestResult>();
 
     System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s%6$s%n");
   }
@@ -108,10 +108,16 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
 
   protected final List<Path> getImageFiles() throws IOException {
     assertTrue("Please download and install test images, and run from the 'core' directory", Files.exists(testBase));
-    List<Path> paths = new ArrayList<>();
-    try (DirectoryStream<Path> pathIt = Files.newDirectoryStream(testBase, "*.{jpg,jpeg,gif,png,JPG,JPEG,GIF,PNG}")) {
+    List<Path> paths = new ArrayList<Path>();
+    DirectoryStream<Path> pathIt = null;
+    try {
+      pathIt = Files.newDirectoryStream(testBase, "*.{jpg,jpeg,gif,png,JPG,JPEG,GIF,PNG}");
       for (Path path : pathIt) {
         paths.add(path);
+      }
+    } finally {
+      if (pathIt != null) {
+        pathIt.close();
       }
     }
     return paths;
@@ -159,8 +165,14 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
       Path expectedMetadataFile = testBase.resolve(fileBaseName + ".metadata.txt");
       Properties expectedMetadata = new Properties();
       if (Files.exists(expectedMetadataFile)) {
-        try (BufferedReader reader = Files.newBufferedReader(expectedMetadataFile, StandardCharsets.UTF_8)) {
+        BufferedReader reader = null;
+        try {
+          reader = Files.newBufferedReader(expectedMetadataFile, StandardCharsets.UTF_8);
           expectedMetadata.load(reader);
+        } finally {
+          if (reader != null) {
+            reader.close();
+          }
         }
       }
 
@@ -257,7 +269,7 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
 
     String suffix = String.format(" (%srotation: %d)", tryHarder ? "try harder, " : "", (int) rotation);
 
-    Map<DecodeHintType,Object> hints = new EnumMap<>(DecodeHintType.class);
+    Map<DecodeHintType,Object> hints = new EnumMap<DecodeHintType,Object>(DecodeHintType.class);
     if (tryHarder) {
       hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);
     }

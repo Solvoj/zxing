@@ -251,10 +251,10 @@ public final class PDF417ScanningDecoder {
       ChecksumException, NotFoundException {
     BarcodeValue[][] barcodeMatrix = createBarcodeMatrix(detectionResult);
     adjustCodewordCount(detectionResult, barcodeMatrix);
-    Collection<Integer> erasures = new ArrayList<>();
+    Collection<Integer> erasures = new ArrayList<Integer>();
     int[] codewords = new int[detectionResult.getBarcodeRowCount() * detectionResult.getBarcodeColumnCount()];
-    List<int[]> ambiguousIndexValuesList = new ArrayList<>();
-    List<Integer> ambiguousIndexesList = new ArrayList<>();
+    List<int[]> ambiguousIndexValuesList = new ArrayList<int[]>();
+    List<Integer> ambiguousIndexesList = new ArrayList<Integer>();
     for (int row = 0; row < detectionResult.getBarcodeRowCount(); row++) {
       for (int column = 0; column < detectionResult.getBarcodeColumnCount(); column++) {
         int[] values = barcodeMatrix[row][column + 1].getValue();

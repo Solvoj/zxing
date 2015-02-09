@@ -59,7 +59,7 @@ public final class RSSExpandedInternalTestCase extends Assert {
     BinaryBitmap binaryMap = new BinaryBitmap(new GlobalHistogramBinarizer(new BufferedImageLuminanceSource(image)));
     int rowNumber = binaryMap.getHeight() / 2;
     BitArray row = binaryMap.getBlackRow(rowNumber, null);
-    List<ExpandedPair> previousPairs = new ArrayList<>();
+    List<ExpandedPair> previousPairs = new ArrayList<ExpandedPair>();
 
     RSSExpandedReader rssExpandedReader = new RSSExpandedReader();
     ExpandedPair pair1 = rssExpandedReader.retrieveNextPair(row, previousPairs, rowNumber);
@@ -95,7 +95,7 @@ public final class RSSExpandedInternalTestCase extends Assert {
     BinaryBitmap binaryMap = new BinaryBitmap(new GlobalHistogramBinarizer(new BufferedImageLuminanceSource(image)));
     int rowNumber = binaryMap.getHeight() / 2;
     BitArray row = binaryMap.getBlackRow(rowNumber, null);
-    List<ExpandedPair> previousPairs = new ArrayList<>();
+    List<ExpandedPair> previousPairs = new ArrayList<ExpandedPair>();
 
     RSSExpandedReader rssExpandedReader = new RSSExpandedReader();
     ExpandedPair pair1 = rssExpandedReader.retrieveNextPair(row, previousPairs, rowNumber);

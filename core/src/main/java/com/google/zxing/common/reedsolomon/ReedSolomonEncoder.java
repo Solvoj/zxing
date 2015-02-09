@@ -32,7 +32,7 @@ public final class ReedSolomonEncoder {
 
   public ReedSolomonEncoder(GenericGF field) {
     this.field = field;
-    this.cachedGenerators = new ArrayList<>();
+    this.cachedGenerators = new ArrayList<GenericGFPoly>();
     cachedGenerators.add(new GenericGFPoly(field, new int[]{1}));
   }
 

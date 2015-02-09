@@ -58,54 +58,43 @@ public final class CommandLineRunner {
     }
 
     Config config = new Config();
-    Queue<Path> inputs = new ConcurrentLinkedQueue<>();
+    Queue<Path> inputs = new ConcurrentLinkedQueue<Path>();
 
     for (String arg : args) {
       String[] argValue = arg.split("=");
-      switch (argValue[0]) {
-        case "--try_harder":
+      String av = argValue[0];
+      if (av.equals("--try_harder")) {
           config.setTryHarder(true);
-          break;
-        case "--pure_barcode":
+      } else if ("--pure_barcode".equals(av)) {
           config.setPureBarcode(true);
-          break;
-        case "--products_only":
+      } else if ("--products_only".equals(av)) {
           config.setProductsOnly(true);
-          break;
-        case "--dump_results":
+      } else if ("--dump_results".equals(av)) {
           config.setDumpResults(true);
-          break;
-        case "--dump_black_point":
+      } else if ("--dump_black_point".equals(av)) {
           config.setDumpBlackPoint(true);
-          break;
-        case "--multi":
+      } else if ("--multi".equals(av)) {
           config.setMulti(true);
-          break;
-        case "--brief":
+      } else if ("--brief".equals(av)) {
           config.setBrief(true);
-          break;
-        case "--recursive":
+      } else if ("--recursive".equals(av)) {
           config.setRecursive(true);
-          break;
-        case "--crop":
+      } else if ("--crop".equals(av)) {
           int[] crop = new int[4];
           String[] tokens = COMMA.split(argValue[1]);
           for (int i = 0; i < crop.length; i++) {
             crop[i] = Integer.parseInt(tokens[i]);
           }
           config.setCrop(crop);
-          break;
-        case "--possibleFormats":
+      } else if ("--possibleFormats".equals(av)) {
           config.setPossibleFormats(COMMA.split(argValue[1]));
-          break;
-        default:
+      } else {
           if (arg.startsWith("-")) {
             System.err.println("Unknown command line option " + arg);
             printUsage();
             return;
           }
           addArgumentToInputs(Paths.get(arg), config, inputs);
-          break;
       }
     }
     config.setHints(buildHints(config));
@@ -114,7 +103,7 @@ public final class CommandLineRunner {
     int successful = 0;    
     if (numThreads > 1) {
       ExecutorService executor = Executors.newFixedThreadPool(numThreads);
-      Collection<Future<Integer>> futures = new ArrayList<>(numThreads);
+      Collection<Future<Integer>> futures = new ArrayList<Future<Integer>>(numThreads);
       for (int x = 0; x < numThreads; x++) {
         futures.add(executor.submit(new DecodeWorker(config, inputs)));
       }
@@ -137,7 +126,9 @@ public final class CommandLineRunner {
   // paths/URLs off the queue.
   private static void addArgumentToInputs(Path inputFile, Config config, Queue<Path> inputs) throws IOException {
     if (Files.isDirectory(inputFile)) {
-      try (DirectoryStream<Path> paths = Files.newDirectoryStream(inputFile)) {
+      DirectoryStream<Path> paths = null;
+      try {
+        paths = Files.newDirectoryStream(inputFile);
         for (Path singleFile : paths) {
           String filename = singleFile.getFileName().toString().toLowerCase(Locale.ENGLISH);
           // Skip hidden files and directories (e.g. svn stuff).
@@ -158,6 +149,11 @@ public final class CommandLineRunner {
           inputs.add(singleFile);
         }
       }
+      finally {
+          if (paths != null) {
+              paths.close();
+          }
+      }
     } else {
       inputs.add(inputFile);
     }
@@ -165,7 +161,7 @@ public final class CommandLineRunner {
 
   // Manually turn on all formats, even those not yet considered production quality.
   private static Map<DecodeHintType,?> buildHints(Config config) {
-    Collection<BarcodeFormat> possibleFormats = new ArrayList<>();
+    Collection<BarcodeFormat> possibleFormats = new ArrayList<BarcodeFormat>();
     String[] possibleFormatsNames = config.getPossibleFormats();
     if (possibleFormatsNames != null && possibleFormatsNames.length > 0) {
       for (String format : possibleFormatsNames) {
@@ -191,7 +187,7 @@ public final class CommandLineRunner {
         possibleFormats.add(BarcodeFormat.MAXICODE);
       }
     }
-    Map<DecodeHintType, Object> hints = new EnumMap<>(DecodeHintType.class);
+    Map<DecodeHintType, Object> hints = new EnumMap<DecodeHintType, Object>(DecodeHintType.class);
     hints.put(DecodeHintType.POSSIBLE_FORMATS, possibleFormats);
     if (config.isTryHarder()) {
       hints.put(DecodeHintType.TRY_HARDER, Boolean.TRUE);

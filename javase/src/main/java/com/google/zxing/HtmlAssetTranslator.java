@@ -86,7 +86,7 @@ public final class HtmlAssetTranslator {
   private static Collection<String> parseLanguagesToTranslate(Path assetsDir,
                                                               CharSequence languageArg) throws IOException {
     if ("all".equals(languageArg)) {
-      Collection<String> languages = new ArrayList<>();
+      Collection<String> languages = new ArrayList<String>();
       DirectoryStream.Filter<Path> fileFilter = new DirectoryStream.Filter<Path>() {
         @Override
         public boolean accept(Path entry) {
@@ -95,9 +95,15 @@ public final class HtmlAssetTranslator {
               fileName.startsWith("html-") && !"html-en".equals(fileName);
         }
       };
-      try (DirectoryStream<Path> dirs = Files.newDirectoryStream(assetsDir, fileFilter)) {
+      DirectoryStream<Path> dirs = null;
+      try {
+        dirs = Files.newDirectoryStream(assetsDir, fileFilter);
         for (Path languageDir : dirs) {
           languages.add(languageDir.getFileName().toString().substring(5));
+        }
+      } finally {
+        if (dirs != null) {
+          dirs.close();
         }
       }
       return languages;
@@ -109,11 +115,17 @@ public final class HtmlAssetTranslator {
   private static Collection<String> parseFileNamesToTranslate(Path assetsDir,
                                                               List<String> restOfArgs) throws IOException {
     if ("all".equals(restOfArgs.get(0))) {
-      Collection<String> fileNamesToTranslate = new ArrayList<>();
+      Collection<String> fileNamesToTranslate = new ArrayList<String>();
       Path htmlEnAssetDir = assetsDir.resolve("html-en");
-      try (DirectoryStream<Path> files = Files.newDirectoryStream(htmlEnAssetDir, "*.html")) {
+      DirectoryStream<Path> files = null;
+      try {
+        files = Files.newDirectoryStream(htmlEnAssetDir, "*.html");
         for (Path file : files) {
           fileNamesToTranslate.add(file.getFileName().toString());
+        }
+      } finally {
+        if (files != null) {
+          files.close();
         }
       }
       return fileNamesToTranslate;
@@ -139,9 +151,15 @@ public final class HtmlAssetTranslator {
         return name.endsWith(".html") && (filesToTranslate.isEmpty() || filesToTranslate.contains(name));
       }
     };
-    try (DirectoryStream<Path> files = Files.newDirectoryStream(englishHtmlDir, filter)) {
+    DirectoryStream<Path> files = null;
+    try {
+      files = Files.newDirectoryStream(englishHtmlDir, filter);
       for (Path sourceFile : files) {
         translateOneFile(language, targetHtmlDir, sourceFile, translationTextTranslated);
+      }
+    } finally {
+      if (files != null) {
+        files.close();
       }
     }
   }
@@ -167,7 +185,7 @@ public final class HtmlAssetTranslator {
     Element rootElement = document.getDocumentElement();
     rootElement.normalize();
 
-    Queue<Node> nodes = new LinkedList<>();
+    Queue<Node> nodes = new LinkedList<Node>();
     nodes.add(rootElement);
 
     while (!nodes.isEmpty()) {
@@ -196,8 +214,12 @@ public final class HtmlAssetTranslator {
     DOMImplementationRegistry registry;
     try {
       registry = DOMImplementationRegistry.newInstance();
-    } catch (ClassNotFoundException | InstantiationException | IllegalAccessException e) {
+    } catch (ClassNotFoundException e) { 
       throw new IllegalStateException(e);
+    } catch (InstantiationException e) {
+      throw new IllegalStateException(e);    
+    } catch (IllegalAccessException e) {
+      throw new IllegalStateException(e);  
     }
 
     DOMImplementationLS impl = (DOMImplementationLS) registry.getDOMImplementation("LS");
