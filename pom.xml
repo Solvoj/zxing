@@ -19,7 +19,7 @@
 
   <groupId>com.google.zxing</groupId>
   <artifactId>zxing-parent</artifactId>
-  <version>3.1.1-SNAPSHOT</version>
+  <version>3.1.1-Java6-SNAPSHOT</version>
   <packaging>pom</packaging>
 
   <dependencyManagement>
