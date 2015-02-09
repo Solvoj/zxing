@@ -301,7 +301,7 @@
             </execution>
           </executions>
           <configuration>
-            <keyname>Sean Owen (ZXing) &lt;srowen@gmail.com&gt;</keyname>
+            <keyname>Solvoj LLC (ZXing for Java 6) &lt;solvojx@gmail.com&gt;</keyname>
             <executable>gpg2</executable>
           </configuration>
         </plugin>
