@@ -414,7 +414,7 @@ public final class BitMatrix implements Cloneable {
   }
 
   public String toString(String setString, String unsetString) {
-    return toString(setString, unsetString, System.lineSeparator());
+    return toString(setString, unsetString, System.getProperty("line.separator"));
   }
   
   public String toString(String setString, String unsetString, String lineSeparator) {
