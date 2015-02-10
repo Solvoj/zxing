@@ -3,3 +3,4 @@ private
 .idea
 *.iml
 nb-configuration.xml
+/zxing.appspot.com/src/main/webapp/WEB-INF/glassfish-web.xml
