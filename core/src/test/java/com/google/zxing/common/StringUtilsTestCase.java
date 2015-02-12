@@ -16,10 +16,10 @@
 
 package com.google.zxing.common;
 
+import java.nio.charset.Charset;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.nio.charset.Charset;
+import sun.misc.Unsafe;
 
 public final class StringUtilsTestCase extends Assert {
 
@@ -59,6 +59,7 @@ public final class StringUtilsTestCase extends Assert {
    */
   public static void main(String[] args) {
     String text = args[0];
+    
     Charset charset = Charset.forName(args[1]);
     StringBuilder declaration = new StringBuilder();
     declaration.append("new byte[] { ");

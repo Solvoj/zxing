@@ -25,10 +25,6 @@ import com.google.zxing.Reader;
 import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.ResultMetadataType;
-import org.junit.Assert;
-import org.junit.Test;
-
-import javax.imageio.ImageIO;
 import java.awt.Graphics;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.RectangularShape;
@@ -38,7 +34,6 @@ import java.awt.image.BufferedImageOp;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -49,6 +44,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
+import javax.imageio.ImageIO;
+import org.junit.Assert;
+import org.junit.Test;
 
 /**
  * @author Sean Owen
@@ -76,7 +74,7 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
     this.barcodeReader = barcodeReader;
     this.expectedFormat = expectedFormat;
     testResults = new ArrayList<TestResult>();
-
+    
     System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s%6$s%n");
   }
 
@@ -155,11 +153,11 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
       Path expectedTextFile = testBase.resolve(fileBaseName + ".txt");
       String expectedText;
       if (Files.exists(expectedTextFile)) {
-        expectedText = readFileAsString(expectedTextFile, StandardCharsets.UTF_8);
+        expectedText = readFileAsString(expectedTextFile, Charset.forName("UTF_8"));
       } else {
         expectedTextFile = testBase.resolve(fileBaseName + ".bin");
         assertTrue(Files.exists(expectedTextFile));
-        expectedText = readFileAsString(expectedTextFile, StandardCharsets.ISO_8859_1);
+        expectedText = readFileAsString(expectedTextFile, Charset.forName("ISO_8859_1"));
       }
 
       Path expectedMetadataFile = testBase.resolve(fileBaseName + ".metadata.txt");
@@ -167,7 +165,7 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
       if (Files.exists(expectedMetadataFile)) {
         BufferedReader reader = null;
         try {
-          reader = Files.newBufferedReader(expectedMetadataFile, StandardCharsets.UTF_8);
+          reader = Files.newBufferedReader(expectedMetadataFile, Charset.forName("UTF_8"));
           expectedMetadata.load(reader);
         } finally {
           if (reader != null) {
