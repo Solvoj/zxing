@@ -30,7 +30,7 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -178,9 +178,10 @@ public final class HtmlAssetTranslator {
       document = builder.parse(sourceFile.toFile());
     } catch (ParserConfigurationException pce) {
       throw new IllegalStateException(pce);
-    } catch (SAXException sae) {
-      throw new IOException(sae);
     }
+//    catch (SAXException sae) {
+//      throw new IOException(sae);
+//    }
 
     Element rootElement = document.getDocumentElement();
     rootElement.normalize();
@@ -227,7 +228,7 @@ public final class HtmlAssetTranslator {
     String fileAsString = writer.writeToString(document);
     // Replace default XML header with HTML DOCTYPE
     fileAsString = fileAsString.replaceAll("<\\?xml[^>]+>", "<!DOCTYPE HTML>");
-    Files.write(destFile, Collections.singleton(fileAsString), StandardCharsets.UTF_8);
+    Files.write(destFile, Collections.singleton(fileAsString), Charset.forName("UTF_8"));
   }
 
   private static boolean shouldTranslate(Node node) {

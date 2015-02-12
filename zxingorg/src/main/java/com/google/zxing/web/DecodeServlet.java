@@ -50,7 +50,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -118,7 +118,7 @@ public final class DecodeServlet extends HttpServlet {
       blockedURLSubstrings = Collections.emptyList();
     } else {
       try {
-        blockedURLSubstrings = Resources.readLines(blockURL, StandardCharsets.UTF_8);
+        blockedURLSubstrings = Resources.readLines(blockURL, Charset.forName("UTF_8"));
       } catch (IOException ioe) {
         throw new ServletException(ioe);
       }
@@ -410,10 +410,10 @@ public final class DecodeServlet extends HttpServlet {
     boolean minimalOutput = fullParameter != null && !Boolean.parseBoolean(fullParameter);
     if (minimalOutput) {
       response.setContentType(MediaType.PLAIN_TEXT_UTF_8.toString());
-      response.setCharacterEncoding(StandardCharsets.UTF_8.name());
+      response.setCharacterEncoding(Charset.forName("UTF_8").name());
       Writer out = null;
       try {
-        out = new OutputStreamWriter(response.getOutputStream(), StandardCharsets.UTF_8);
+        out = new OutputStreamWriter(response.getOutputStream(), Charset.forName("UTF_8"));
         for (Result result : results) {
           out.write(result.getText());
           out.write('\n');

@@ -35,7 +35,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map;
@@ -52,7 +51,7 @@ public final class ChartServlet extends HttpServlet {
 
   private static final int MAX_DIMENSION = 4096;
   private static final Collection<Charset> SUPPORTED_OUTPUT_ENCODINGS = ImmutableSet.<Charset>builder()
-      .add(StandardCharsets.UTF_8).add(StandardCharsets.ISO_8859_1).add(Charset.forName("Shift_JIS")).build();
+      .add(Charset.forName("UTF_8")).add(Charset.forName("ISO_8859_1")).add(Charset.forName("Shift_JIS")).build();
 
   @Override
   protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -80,7 +79,7 @@ public final class ChartServlet extends HttpServlet {
 
     Map<EncodeHintType,Object> hints = new EnumMap<EncodeHintType,Object>(EncodeHintType.class);
     hints.put(EncodeHintType.MARGIN, parameters.getMargin());
-    if (!StandardCharsets.ISO_8859_1.equals(parameters.getOutputEncoding())) {
+    if (!Charset.forName("ISO_8859_1").equals(parameters.getOutputEncoding())) {
       // Only set if not QR code default
       hints.put(EncodeHintType.CHARACTER_SET, parameters.getOutputEncoding().name());
     }
@@ -124,7 +123,7 @@ public final class ChartServlet extends HttpServlet {
     Preconditions.checkArgument(width <= MAX_DIMENSION && height <= MAX_DIMENSION, "Bad size");
 
     String outputEncodingName = request.getParameter("choe");
-    Charset outputEncoding = StandardCharsets.UTF_8;
+    Charset outputEncoding = Charset.forName("UTF_8");
     if (outputEncodingName != null) {
       outputEncoding = Charset.forName(outputEncodingName);
       Preconditions.checkArgument(SUPPORTED_OUTPUT_ENCODINGS.contains(outputEncoding), "Bad output encoding");
