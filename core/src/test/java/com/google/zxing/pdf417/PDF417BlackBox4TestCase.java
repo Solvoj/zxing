@@ -37,6 +37,7 @@ import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -94,11 +95,11 @@ public final class PDF417BlackBox4TestCase extends AbstractBlackBoxTestCase {
       String expectedText;
       Path expectedTextFile = testBase.resolve(fileBaseName + ".txt");
       if (Files.exists(expectedTextFile)) {
-        expectedText = readFileAsString(expectedTextFile, Charset.forName("UTF_8"));
+        expectedText = readFileAsString(expectedTextFile, StandardCharsets.UTF_8);
       } else {
         expectedTextFile = testBase.resolve(fileBaseName + ".bin");
         assertTrue(Files.exists(expectedTextFile));
-        expectedText = readFileAsString(expectedTextFile, Charset.forName("ISO_8859_1"));
+        expectedText = readFileAsString(expectedTextFile, StandardCharsets.ISO_8859_1);
       }
 
       for (int x = 0; x < testCount; x++) {

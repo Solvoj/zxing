@@ -34,6 +34,7 @@ import java.awt.image.BufferedImageOp;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -153,7 +154,7 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
       Path expectedTextFile = testBase.resolve(fileBaseName + ".txt");
       String expectedText;
       if (Files.exists(expectedTextFile)) {
-        expectedText = readFileAsString(expectedTextFile, Charset.forName("UTF_8"));
+        expectedText = readFileAsString(expectedTextFile, StandardCharsets.UTF_8);
       } else {
         expectedTextFile = testBase.resolve(fileBaseName + ".bin");
         assertTrue(Files.exists(expectedTextFile));
@@ -165,7 +166,7 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
       if (Files.exists(expectedMetadataFile)) {
         BufferedReader reader = null;
         try {
-          reader = Files.newBufferedReader(expectedMetadataFile, Charset.forName("UTF_8"));
+          reader = Files.newBufferedReader(expectedMetadataFile, StandardCharsets.UTF_8);
           expectedMetadata.load(reader);
         } finally {
           if (reader != null) {

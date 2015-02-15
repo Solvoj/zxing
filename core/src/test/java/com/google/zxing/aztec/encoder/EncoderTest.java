@@ -30,6 +30,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Random;
@@ -137,7 +138,7 @@ public final class EncoderTest extends Assert {
       String data = "In ut magna vel mauris malesuada";
       AztecWriter writer = new AztecWriter();
       BitMatrix matrix = writer.encode(data, BarcodeFormat.AZTEC, 0, 0);
-      AztecCode aztec = Encoder.encode(data.getBytes(Charset.forName("ISO_8859_1")),
+      AztecCode aztec = Encoder.encode(data.getBytes(StandardCharsets.ISO_8859_1),
           Encoder.DEFAULT_EC_PERCENT, Encoder.DEFAULT_AZTEC_LAYERS);
       BitMatrix expectedMatrix = aztec.getMatrix();
       assertEquals(matrix, expectedMatrix);
@@ -386,7 +387,7 @@ public final class EncoderTest extends Assert {
 
   @Test
   public void testUserSpecifiedLayers() throws Exception {
-    byte[] alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes(Charset.forName("ISO_8859_1"));
+    byte[] alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".getBytes(StandardCharsets.ISO_8859_1);
     AztecCode aztec = Encoder.encode(alphabet, 25, -2);
     assertEquals(2, aztec.getLayers());
     assertTrue(aztec.isCompact());
