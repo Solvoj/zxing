@@ -26,17 +26,13 @@
 
 package com.google.zxing.oned.rss.expanded;
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
-import javax.imageio.ImageIO;
-
 import com.google.zxing.BinaryBitmap;
 import com.google.zxing.BufferedImageLuminanceSource;
 import com.google.zxing.common.GlobalHistogramBinarizer;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import javax.imageio.ImageIO;
 
 final class TestCaseUtil {
 
@@ -44,12 +40,12 @@ final class TestCaseUtil {
   }
 
   private static BufferedImage getBufferedImage(String path) throws IOException {
-    Path file = Paths.get(path);
-    if (!Files.exists(file)) {
+    File file = new File(path);
+    if (!file.exists()) {
       // Support running from project root too
-      file = Paths.get("core").resolve(file);
+      file = new File("core", path);
     }
-    return ImageIO.read(file.toFile());
+    return ImageIO.read(file);
   }
 
   static BinaryBitmap getBinaryBitmap(String path) throws IOException {

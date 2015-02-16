@@ -16,37 +16,39 @@
 
 package com.google.zxing.pdf417.encoder;
 
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import org.junit.Assert;
 import org.junit.Test;
 
 public final class PDF417EncoderTestCase extends Assert {
+    
+  private static final Charset UTF8 = Charset.forName("UTF-8");
 
   @Test
   public void testEncodeAuto() throws Exception {
     String encoded = PDF417HighLevelEncoder.encodeHighLevel(
-        "ABCD", Compaction.AUTO, StandardCharsets.UTF_8);
+        "ABCD", Compaction.AUTO, UTF8);
     assertEquals("\u039f\u001A\u0385ABCD", encoded);
   }
 
   @Test
   public void testEncodeText() throws Exception {
     String encoded = PDF417HighLevelEncoder.encodeHighLevel(
-        "ABCD", Compaction.TEXT, StandardCharsets.UTF_8);
+        "ABCD", Compaction.TEXT, UTF8);
     assertEquals("Ο\u001A\u0001?", encoded);
   }
 
   @Test
   public void testEncodeNumeric() throws Exception {
     String encoded = PDF417HighLevelEncoder.encodeHighLevel(
-        "1234", Compaction.NUMERIC, StandardCharsets.UTF_8);
+        "1234", Compaction.NUMERIC, UTF8);
     assertEquals("\u039f\u001A\u0386\f\u01b2", encoded);
   }
 
   @Test
   public void testEncodeByte() throws Exception {
     String encoded = PDF417HighLevelEncoder.encodeHighLevel(
-        "abcd", Compaction.BYTE, StandardCharsets.UTF_8);
+        "abcd", Compaction.BYTE, UTF8);
     assertEquals("\u039f\u001A\u0385abcd", encoded);
   }
 

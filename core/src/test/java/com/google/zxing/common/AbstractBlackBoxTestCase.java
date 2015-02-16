@@ -31,17 +31,17 @@ import java.awt.geom.RectangularShape;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.awt.image.BufferedImageOp;
-import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.logging.Logger;
@@ -55,9 +55,20 @@ import org.junit.Test;
  */
 public abstract class AbstractBlackBoxTestCase extends Assert {
 
-  private static final Logger log = Logger.getLogger(AbstractBlackBoxTestCase.class.getSimpleName());
+    private static final Logger log = Logger.getLogger(AbstractBlackBoxTestCase.class.getSimpleName());
 
-  private final Path testBase;
+    private static final Charset UTF8 = Charset.forName("UTF-8");
+    private static final Charset ISO88591 = Charset.forName("ISO-8859-1");
+    private static final FilenameFilter IMAGE_NAME_FILTER = new FilenameFilter() {
+        @Override
+        public boolean accept(File dir, String name) {
+            String lowerCase = name.toLowerCase(Locale.ENGLISH);
+            return lowerCase.endsWith(".jpg") || lowerCase.endsWith(".jpeg")
+                    || lowerCase.endsWith(".gif") || lowerCase.endsWith(".png");
+        }
+    };
+
+  private final File testBase;
   private final Reader barcodeReader;
   private final BarcodeFormat expectedFormat;
   private final List<TestResult> testResults;
@@ -66,10 +77,10 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
                                      Reader barcodeReader,
                                      BarcodeFormat expectedFormat) {
     // A little workaround to prevent aggravation in my IDE
-    Path testBase = Paths.get(testBasePathSuffix);
-    if (!Files.exists(testBase)) {
+    File testBase = new File(testBasePathSuffix);
+    if (!testBase.exists()) {
       // try starting with 'core' since the test base is often given as the project root
-      testBase = Paths.get("core").resolve(testBasePathSuffix);
+      testBase = new File("core", testBasePathSuffix);
     }
     this.testBase = testBase;
     this.barcodeReader = barcodeReader;
@@ -79,7 +90,7 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
     System.setProperty("java.util.logging.SimpleFormatter.format", "%4$s: %5$s%6$s%n");
   }
 
-  protected final Path getTestBase() {
+  protected final File getTestBase() {
     return testBase;
   }
 
@@ -105,21 +116,8 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
     testResults.add(new TestResult(mustPassCount, tryHarderCount, maxMisreads, maxTryHarderMisreads, rotation));
   }
 
-  protected final List<Path> getImageFiles() throws IOException {
-    assertTrue("Please download and install test images, and run from the 'core' directory", Files.exists(testBase));
-    List<Path> paths = new ArrayList<Path>();
-    DirectoryStream<Path> pathIt = null;
-    try {
-      pathIt = Files.newDirectoryStream(testBase, "*.{jpg,jpeg,gif,png,JPG,JPEG,GIF,PNG}");
-      for (Path path : pathIt) {
-        paths.add(path);
-      }
-    } finally {
-      if (pathIt != null) {
-        pathIt.close();
-      }
-    }
-    return paths;
+  protected final File[] getImageFiles() throws IOException {
+    return testBase.listFiles(IMAGE_NAME_FILTER);
   }
 
   final Reader getReader() {
@@ -136,7 +134,7 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
   public final SummaryResults testBlackBoxCountingResults(boolean assertOnFailure) throws IOException {
     assertFalse(testResults.isEmpty());
 
-    List<Path> imageFiles = getImageFiles();
+    File[] imageFiles = getImageFiles();
     int testCount = testResults.size();
 
     int[] passedCounts = new int[testCount];
@@ -144,36 +142,33 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
     int[] tryHarderCounts = new int[testCount];
     int[] tryHaderMisreadCounts = new int[testCount];
 
-    for (Path testImage : imageFiles) {
+    for (File testImage : imageFiles) {
       log.info(String.format("Starting %s", testImage));
 
-      BufferedImage image = ImageIO.read(testImage.toFile());
+      BufferedImage image = ImageIO.read(testImage);
 
-      String testImageFileName = testImage.getFileName().toString();
+      String testImageFileName = testImage.getName();
       String fileBaseName = testImageFileName.substring(0, testImageFileName.indexOf('.'));
-      Path expectedTextFile = testBase.resolve(fileBaseName + ".txt");
+      File expectedTextFile = new File(testBase, fileBaseName + ".txt");
       String expectedText;
-      if (Files.exists(expectedTextFile)) {
-        expectedText = readFileAsString(expectedTextFile, StandardCharsets.UTF_8);
+      if (expectedTextFile.exists()) {
+        expectedText = readFileAsString(expectedTextFile, UTF8);
       } else {
-        expectedTextFile = testBase.resolve(fileBaseName + ".bin");
-        assertTrue(Files.exists(expectedTextFile));
-        expectedText = readFileAsString(expectedTextFile, Charset.forName("ISO_8859_1"));
+        expectedTextFile = new File(testBase, fileBaseName + ".bin");
+        assertTrue(expectedTextFile.exists());
+        expectedText = readFileAsString(expectedTextFile, ISO88591);
       }
 
-      Path expectedMetadataFile = testBase.resolve(fileBaseName + ".metadata.txt");
-      Properties expectedMetadata = new Properties();
-      if (Files.exists(expectedMetadataFile)) {
-        BufferedReader reader = null;
-        try {
-          reader = Files.newBufferedReader(expectedMetadataFile, StandardCharsets.UTF_8);
-          expectedMetadata.load(reader);
-        } finally {
-          if (reader != null) {
-            reader.close();
-          }
+      File expectedMetadataFile = new File(testBase, fileBaseName + ".metadata.txt");
+        Properties expectedMetadata = new Properties();
+        if (expectedMetadataFile.exists()) {
+            InputStream expectedStream = new FileInputStream(expectedMetadataFile);
+            try {
+                expectedMetadata.load(expectedStream);
+            } finally {
+                expectedStream.close();
+            }
         }
-      }
 
       for (int x = 0; x < testCount; x++) {
         float rotation = testResults.get(x).getRotation();
@@ -211,13 +206,13 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
       TestResult testResult = testResults.get(x);
       log.info(String.format("Rotation %d degrees:", (int) testResult.getRotation()));
       log.info(String.format(" %d of %d images passed (%d required)",
-                             passedCounts[x], imageFiles.size(), testResult.getMustPassCount()));
-      int failed = imageFiles.size() - passedCounts[x];
+                             passedCounts[x], imageFiles.length, testResult.getMustPassCount()));
+      int failed = imageFiles.length - passedCounts[x];
       log.info(String.format(" %d failed due to misreads, %d not detected",
                              misreadCounts[x], failed - misreadCounts[x]));
       log.info(String.format(" %d of %d images passed with try harder (%d required)",
-                             tryHarderCounts[x], imageFiles.size(), testResult.getTryHarderCount()));
-      failed = imageFiles.size() - tryHarderCounts[x];
+                             tryHarderCounts[x], imageFiles.length, testResult.getTryHarderCount()));
+      failed = imageFiles.length - tryHarderCounts[x];
       log.info(String.format(" %d failed due to misreads, %d not detected",
                              tryHaderMisreadCounts[x], failed - tryHaderMisreadCounts[x]));
       totalFound += passedCounts[x] + tryHarderCounts[x];
@@ -226,7 +221,7 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
       totalMaxMisread += testResult.getMaxMisreads() + testResult.getMaxTryHarderMisreads();
     }
 
-    int totalTests = imageFiles.size() * testCount * 2;
+    int totalTests = imageFiles.length * testCount * 2;
     log.info(String.format("Decoded %d images out of %d (%d%%, %d required)",
                            totalFound, totalTests, totalFound * 100 / totalTests, totalMustPass));
     if (totalFound > totalMustPass) {
@@ -303,14 +298,25 @@ public abstract class AbstractBlackBoxTestCase extends Assert {
     return true;
   }
 
-  protected static String readFileAsString(Path file, Charset charset) throws IOException {
-    String stringContents = new String(Files.readAllBytes(file), charset);
-    if (stringContents.endsWith("\n")) {
-      log.info("String contents of file " + file + " end with a newline. " +
-                  "This may not be intended and cause a test failure");
+    protected static String readFileAsString(File file, Charset charset) throws IOException {
+        StringBuilder result = new StringBuilder((int) file.length());
+        InputStreamReader reader = new InputStreamReader(new FileInputStream(file), charset);
+        try {
+            char[] buffer = new char[256];
+            int charsRead;
+            while ((charsRead = reader.read(buffer)) > 0) {
+                result.append(buffer, 0, charsRead);
+            }
+        } finally {
+            reader.close();
+        }
+        String stringContents = result.toString();
+        if (stringContents.endsWith("\n")) {
+            log.info("String contents of file " + file + " end with a newline. "
+                    + "This may not be intended and cause a test failure");
+        }
+        return stringContents;
     }
-    return stringContents;
-  }
 
   protected static BufferedImage rotateImage(BufferedImage original, float degrees) {
     if (degrees == 0.0f) {

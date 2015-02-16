@@ -33,9 +33,6 @@ package com.google.zxing.oned.rss.expanded;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.HashMap;
 
 import javax.imageio.ImageIO;
@@ -51,6 +48,7 @@ import com.google.zxing.client.result.ParsedResult;
 import com.google.zxing.client.result.ResultParser;
 import com.google.zxing.common.BitArray;
 import com.google.zxing.common.GlobalHistogramBinarizer;
+import java.io.File;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -78,13 +76,15 @@ public final class RSSExpandedImage2resultTestCase extends Assert {
 
   private static void assertCorrectImage2result(String fileName, ExpandedProductParsedResult expected)
       throws IOException, NotFoundException {
-    Path path = Paths.get("src/test/resources/blackbox/rssexpanded-1/").resolve(fileName);
-    if (!Files.exists(path)) {
+    // Path path = Paths.get("src/test/resources/blackbox/rssexpanded-1/").resolve(fileName);
+    String path = "src/test/resources/blackbox/rssexpanded-1/" + fileName;
+    File file = new File(path);
+    if (!file.exists()) {
       // Support running from project root too
-      path = Paths.get("core").resolve(path);
+      file = new File("core", path);
     }
 
-    BufferedImage image = ImageIO.read(path.toFile());
+    BufferedImage image = ImageIO.read(file);
     BinaryBitmap binaryMap = new BinaryBitmap(new GlobalHistogramBinarizer(new BufferedImageLuminanceSource(image)));
     int rowNumber = binaryMap.getHeight() / 2;
     BitArray row = binaryMap.getBlackRow(rowNumber, null);
