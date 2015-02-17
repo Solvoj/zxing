@@ -22,15 +22,13 @@ import com.google.zxing.MultiFormatReader;
 import com.google.zxing.ReaderException;
 import com.google.zxing.Result;
 import com.google.zxing.common.HybridBinarizer;
-
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.nio.file.Path;
-
 import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JFileChooser;
@@ -77,18 +75,22 @@ public final class GUIRunner extends JFrame {
   private void chooseImage() throws MalformedURLException {
     JFileChooser fileChooser = new JFileChooser();
     fileChooser.showOpenDialog(this);
-    Path file = fileChooser.getSelectedFile().toPath();
-    Icon imageIcon = new ImageIcon(file.toUri().toURL());
+    File file = fileChooser.getSelectedFile();
+    if (file == null) {
+        dispose();
+        return;
+    }
+    Icon imageIcon = new ImageIcon(file.toURI().toURL());
     setSize(imageIcon.getIconWidth(), imageIcon.getIconHeight() + 100);
     imageLabel.setIcon(imageIcon);
     String decodeText = getDecodeText(file);
     textArea.setText(decodeText);
   }
 
-  private static String getDecodeText(Path file) {
+  private static String getDecodeText(File file) {
     BufferedImage image;
     try {
-      image = ImageReader.readImage(file.toUri());
+      image = ImageReader.readImage(file.toURI());
     } catch (IOException ioe) {
       return ioe.toString();
     }

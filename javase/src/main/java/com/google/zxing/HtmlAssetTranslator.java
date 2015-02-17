@@ -16,6 +16,20 @@
 
 package com.google.zxing;
 
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.regex.Pattern;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
@@ -26,23 +40,6 @@ import org.w3c.dom.ls.DOMImplementationLS;
 import org.w3c.dom.ls.LSSerializer;
 import org.xml.sax.SAXException;
 
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.ParserConfigurationException;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.regex.Pattern;
 
 /**
  * <p>A utility which auto-translates the English-language text in a directory of HTML documents using
@@ -74,7 +71,7 @@ public final class HtmlAssetTranslator {
                          "(all|lang1[,lang2 ...]) (all|file1.html[ file2.html ...])");
       return;
     }
-    Path assetsDir = Paths.get(args[0]);
+    File assetsDir = new File(args[0]);
     Collection<String> languagesToTranslate = parseLanguagesToTranslate(assetsDir, args[1]);
     List<String> restOfArgs = Arrays.asList(args).subList(2, args.length);
     Collection<String> fileNamesToTranslate = parseFileNamesToTranslate(assetsDir, restOfArgs);
@@ -83,28 +80,21 @@ public final class HtmlAssetTranslator {
     }
   }
 
-  private static Collection<String> parseLanguagesToTranslate(Path assetsDir,
+  private static Collection<String> parseLanguagesToTranslate(File assetsDir,
                                                               CharSequence languageArg) throws IOException {
     if ("all".equals(languageArg)) {
       Collection<String> languages = new ArrayList<String>();
-      DirectoryStream.Filter<Path> fileFilter = new DirectoryStream.Filter<Path>() {
+      FileFilter fileFilter = new FileFilter() {
+
         @Override
-        public boolean accept(Path entry) {
-          String fileName = entry.getFileName().toString();
-          return Files.isDirectory(entry) && !Files.isSymbolicLink(entry) &&
-              fileName.startsWith("html-") && !"html-en".equals(fileName);
+        public boolean accept(File file) {
+          String fileName = file.getName();
+          return file.isDirectory() && fileName.startsWith("html-") && !"html-en".equals(fileName);
         }
       };
-      DirectoryStream<Path> dirs = null;
-      try {
-        dirs = Files.newDirectoryStream(assetsDir, fileFilter);
-        for (Path languageDir : dirs) {
-          languages.add(languageDir.getFileName().toString().substring(5));
-        }
-      } finally {
-        if (dirs != null) {
-          dirs.close();
-        }
+
+      for (File languageDir : assetsDir.listFiles(fileFilter)) {
+        languages.add(languageDir.getName().substring(5));
       }
       return languages;
     } else {
@@ -112,21 +102,20 @@ public final class HtmlAssetTranslator {
     }
   }
 
-  private static Collection<String> parseFileNamesToTranslate(Path assetsDir,
+  private static Collection<String> parseFileNamesToTranslate(File assetsDir,
                                                               List<String> restOfArgs) throws IOException {
     if ("all".equals(restOfArgs.get(0))) {
       Collection<String> fileNamesToTranslate = new ArrayList<String>();
-      Path htmlEnAssetDir = assetsDir.resolve("html-en");
-      DirectoryStream<Path> files = null;
-      try {
-        files = Files.newDirectoryStream(htmlEnAssetDir, "*.html");
-        for (Path file : files) {
-          fileNamesToTranslate.add(file.getFileName().toString());
+      File htmlEnAssetDir = new File(assetsDir, "html-en");
+      FileFilter fileFilter = new FileFilter() {
+
+        @Override
+        public boolean accept(File file) {
+          return file.isFile() && file.getName().endsWith(".html");
         }
-      } finally {
-        if (files != null) {
-          files.close();
-        }
+      };
+      for (File file : htmlEnAssetDir.listFiles(fileFilter)) {
+        fileNamesToTranslate.add(file.getName());
       }
       return fileNamesToTranslate;
     } else {
@@ -134,54 +123,45 @@ public final class HtmlAssetTranslator {
     }
   }
 
-  private static void translateOneLanguage(Path assetsDir,
+  private static void translateOneLanguage(File assetsDir,
                                            String language,
                                            final Collection<String> filesToTranslate) throws IOException {
-    Path targetHtmlDir = assetsDir.resolve("html-" + language);
-    Files.createDirectories(targetHtmlDir);
-    Path englishHtmlDir = assetsDir.resolve("html-en");
+    File targetHtmlDir = new File(assetsDir, "html-" + language); 
+    targetHtmlDir.mkdirs();
+    File englishHtmlDir = new File(assetsDir, "html-en");
 
     String translationTextTranslated =
         StringsResourceTranslator.translateString("Translated by Google Translate.", language);
 
-    DirectoryStream.Filter<Path> filter = new DirectoryStream.Filter<Path>() {
+    File[] sourceFiles = englishHtmlDir.listFiles(new FilenameFilter() {
       @Override
-      public boolean accept(Path entry) {
-        String name = entry.getFileName().toString();
+      public boolean accept(File dir, String name) {
         return name.endsWith(".html") && (filesToTranslate.isEmpty() || filesToTranslate.contains(name));
       }
-    };
-    DirectoryStream<Path> files = null;
-    try {
-      files = Files.newDirectoryStream(englishHtmlDir, filter);
-      for (Path sourceFile : files) {
-        translateOneFile(language, targetHtmlDir, sourceFile, translationTextTranslated);
-      }
-    } finally {
-      if (files != null) {
-        files.close();
-      }
+    });
+    for (File sourceFile : sourceFiles) {
+      translateOneFile(language, targetHtmlDir, sourceFile, translationTextTranslated);
     }
   }
 
   private static void translateOneFile(String language,
-                                       Path targetHtmlDir,
-                                       Path sourceFile,
+                                       File targetHtmlDir,
+                                       File sourceFile,
                                        String translationTextTranslated) throws IOException {
 
-    Path destFile = targetHtmlDir.resolve(sourceFile.getFileName());
+    File destFile = new File(targetHtmlDir, sourceFile.getName());
 
     DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
     Document document;
     try {
       DocumentBuilder builder = factory.newDocumentBuilder();
-      document = builder.parse(sourceFile.toFile());
+      document = builder.parse(sourceFile);
     } catch (ParserConfigurationException pce) {
       throw new IllegalStateException(pce);
     }
-//    catch (SAXException sae) {
-//      throw new IOException(sae);
-//    }
+   catch (SAXException sae) {
+      throw new IOException(sae);
+   }
 
     Element rootElement = document.getDocumentElement();
     rootElement.normalize();
@@ -228,7 +208,8 @@ public final class HtmlAssetTranslator {
     String fileAsString = writer.writeToString(document);
     // Replace default XML header with HTML DOCTYPE
     fileAsString = fileAsString.replaceAll("<\\?xml[^>]+>", "<!DOCTYPE HTML>");
-    Files.write(destFile, Collections.singleton(fileAsString), Charset.forName("UTF_8"));
+    writer.writeToURI(document, language);
+    // Files.write(destFile, Collections.singleton(fileAsString), Charset.forName("UTF_8"));
   }
 
   private static boolean shouldTranslate(Node node) {

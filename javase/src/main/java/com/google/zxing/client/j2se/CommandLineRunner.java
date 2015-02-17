@@ -18,12 +18,8 @@ package com.google.zxing.client.j2se;
 
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.DecodeHintType;
-
+import java.io.File;
 import java.io.IOException;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -58,7 +54,7 @@ public final class CommandLineRunner {
     }
 
     Config config = new Config();
-    Queue<Path> inputs = new ConcurrentLinkedQueue<Path>();
+    Queue<String> inputs = new ConcurrentLinkedQueue<String>();
 
     for (String arg : args) {
       String[] argValue = arg.split("=");
@@ -94,7 +90,7 @@ public final class CommandLineRunner {
             printUsage();
             return;
           }
-          addArgumentToInputs(Paths.get(arg), config, inputs);
+          addArgumentToInputs(arg, config, inputs);
       }
     }
     config.setHints(buildHints(config));
@@ -124,21 +120,20 @@ public final class CommandLineRunner {
 
   // Build all the inputs up front into a single flat list, so the threads can atomically pull
   // paths/URLs off the queue.
-  private static void addArgumentToInputs(Path inputFile, Config config, Queue<Path> inputs) throws IOException {
-    if (Files.isDirectory(inputFile)) {
-      DirectoryStream<Path> paths = null;
-      try {
-        paths = Files.newDirectoryStream(inputFile);
-        for (Path singleFile : paths) {
-          String filename = singleFile.getFileName().toString().toLowerCase(Locale.ENGLISH);
+  private static void addArgumentToInputs(String argument, Config config, Queue<String> inputs) throws IOException {
+    File inputFile = new File(argument);
+    if (inputFile.exists()) {
+      if (inputFile.isDirectory()) {
+        for (File singleFile : inputFile.listFiles()) {
+          String filename = singleFile.getName().toLowerCase(Locale.ENGLISH);
           // Skip hidden files and directories (e.g. svn stuff).
           if (filename.startsWith(".")) {
             continue;
           }
           // Recur on nested directories if requested, otherwise skip them.
-          if (Files.isDirectory(singleFile)) {
+          if (singleFile.isDirectory()) {
             if (config.isRecursive()) {
-              addArgumentToInputs(singleFile, config, inputs);
+              addArgumentToInputs(singleFile.getAbsolutePath(), config, inputs);
             }
             continue;
           }
@@ -146,16 +141,13 @@ public final class CommandLineRunner {
           if (filename.endsWith(".txt") || filename.contains(".mono.png")) {
             continue;
           }
-          inputs.add(singleFile);
+          inputs.add(singleFile.getCanonicalPath());
         }
-      }
-      finally {
-          if (paths != null) {
-              paths.close();
-          }
+      } else {
+        inputs.add(inputFile.getCanonicalPath());
       }
     } else {
-      inputs.add(inputFile);
+      inputs.add(argument);
     }
   }
 

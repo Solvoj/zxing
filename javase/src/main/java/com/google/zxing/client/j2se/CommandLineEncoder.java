@@ -19,8 +19,7 @@ package com.google.zxing.client.j2se;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.common.BitMatrix;
-
-import java.nio.file.Paths;
+import java.io.File;
 import java.util.Locale;
 
 /**
@@ -85,7 +84,7 @@ public final class CommandLineEncoder {
     }
     
     BitMatrix matrix = new MultiFormatWriter().encode(contents, barcodeFormat, width, height);
-    MatrixToImageWriter.writeToPath(matrix, imageFormat, Paths.get(outFileString));
+    MatrixToImageWriter.writeToPath(matrix, imageFormat, new File(outFileString));
   }
 
   private static void printUsage() {

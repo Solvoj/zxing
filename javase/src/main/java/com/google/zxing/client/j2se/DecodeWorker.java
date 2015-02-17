@@ -30,15 +30,15 @@ import com.google.zxing.common.BitMatrix;
 import com.google.zxing.common.HybridBinarizer;
 import com.google.zxing.multi.GenericMultipleBarcodeReader;
 import com.google.zxing.multi.MultipleBarcodeReader;
-
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -46,6 +46,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.Callable;
+import javax.imageio.ImageIO;
 
 /**
  * One of a pool of threads which pulls images off the Inputs queue and decodes them in parallel.
@@ -58,10 +59,11 @@ final class DecodeWorker implements Callable<Integer> {
   private static final int BLACK = 0xFF000000;
   private static final int WHITE = 0xFFFFFFFF;
 
+  private static final Charset UTF8 = Charset.forName("UTF8");
   private final Config config;
-  private final Queue<Path> inputs;
+  private final Queue<String> inputs;
 
-  DecodeWorker(Config config, Queue<Path> inputs) {
+  DecodeWorker(Config config, Queue<String> inputs) {
     this.config = config;
     this.inputs = inputs;
   }
@@ -69,28 +71,29 @@ final class DecodeWorker implements Callable<Integer> {
   @Override
   public Integer call() throws IOException {
     int successful = 0;
-    Path input;
+    String input;
     while ((input = inputs.poll()) != null) {
-      if (Files.exists(input)) {
+      File inputFile = new File(input);
+      if (inputFile.exists()) {
         if (config.isMulti()) {
-          Result[] results = decodeMulti(input.toUri(), config.getHints());
+          Result[] results = decodeMulti(inputFile.toURI(), config.getHints());
           if (results != null) {
             successful++;
             if (config.isDumpResults()) {
-              dumpResultMulti(input, results);
+              dumpResultMulti(inputFile, results);
             }
           }
         } else {
-          Result result = decode(input.toUri(), config.getHints());
+          Result result = decode(inputFile.toURI(), config.getHints());
           if (result != null) {
             successful++;
             if (config.isDumpResults()) {
-              dumpResult(input, result);
+              dumpResult(inputFile, result);
             }
           }
         }
       } else {
-        if (decode(input.toUri(), config.getHints()) != null) {
+        if (decode(URI.create(input), config.getHints()) != null) {
           successful++;
         }
       }
@@ -98,28 +101,41 @@ final class DecodeWorker implements Callable<Integer> {
     return successful;
   }
 
-  private static void dumpResult(Path input, Result result) throws IOException {
-    String name = input.getFileName().toString();
+  private static void dumpResult(File input, Result result) throws IOException {
+    String name = input.getCanonicalPath();
     int pos = name.lastIndexOf('.');
     if (pos > 0) {
       name = name.substring(0, pos) + ".txt";
     }
-    Path dumpFile = input.getParent().resolve(name);
-    Files.write(dumpFile, Collections.singleton(result.getText()), StandardCharsets.UTF_8);
+    File dumpFile = new File(name);
+    // TODO
+    // Files.write(dumpFile, Collections.singleton(result.getText()), StandardCharsets.UTF_8);
   }
 
-  private static void dumpResultMulti(Path input, Result[] results) throws IOException {
-    String name = input.getFileName().toString();
+  private static void dumpResultMulti(File input, Result[] results) throws IOException {
+    String name = input.getCanonicalPath();
     int pos = name.lastIndexOf('.');
     if (pos > 0) {
       name = name.substring(0, pos) + ".txt";
     }
-    Path dumpFile = input.getParent().resolve(name);
-    Collection<String> resultTexts = new ArrayList<String>();
-    for (Result result : results) {
-      resultTexts.add(result.getText());
+    File dumpFile = new File(name);
+    writeResultsToFile(results, dumpFile);
+  }
+  
+  private static void writeResultsToFile(Result[] results, File file) throws IOException {
+    String newline = System.getProperty("line.separator");
+    Writer out = null;
+    try {
+      out = new OutputStreamWriter(new FileOutputStream(file), UTF8);
+      for (Result result : results) {
+        out.write(result.getText());
+        out.write(newline);
+      }
+    } finally {
+      if (out != null) {
+        out.close();
+      }
     }
-    Files.write(dumpFile, resultTexts, StandardCharsets.UTF_8);
   }
 
   private Result decode(URI uri, Map<DecodeHintType,?> hints) throws IOException {
@@ -281,10 +297,13 @@ final class DecodeWorker implements Callable<Integer> {
       resultName = resultName.substring(0, pos);
     }
     resultName += suffix;
+    OutputStream outStream;
     try {
-      if (!ImageIO.write(result, "png", Paths.get(resultName).toFile())) {
+      outStream = new FileOutputStream(resultName);
+      if (!ImageIO.write(result, "png", outStream)) {
         System.err.println("Could not encode an image to " + resultName);
       }
+      outStream.close();
     } catch (IOException ignored) {
       System.err.println("Could not write to " + resultName);
     }

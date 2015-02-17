@@ -17,18 +17,19 @@
 package com.google.zxing;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.Writer;
 import java.net.URI;
 import java.net.URLConnection;
 import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.DirectoryStream;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -59,6 +60,7 @@ public final class StringsResourceTranslator {
     }
   }
   
+  private static final Charset UTF8 = Charset.forName("UTF-8");
   private static final Pattern ENTRY_PATTERN = Pattern.compile("<string name=\"([^\"]+)\".*>([^<]+)</string>");
   private static final Pattern STRINGS_FILE_NAME_PATTERN = Pattern.compile("values-(.+)");
   private static final Pattern TRANSLATE_RESPONSE_PATTERN = Pattern.compile("translatedText\":\\s*\"([^\"]+)\"");
@@ -90,38 +92,31 @@ public final class StringsResourceTranslator {
   private StringsResourceTranslator() {}
 
   public static void main(String[] args) throws IOException {
-    Path resDir = Paths.get(args[0]);
-    Path valueDir = resDir.resolve("values");
-    Path stringsFile = valueDir.resolve("strings.xml");
+    File resDir = new File(args[0]);
+    File valueDir = new File(resDir, "values");
+    File stringsFile = new File(resDir, "strings.xml");
     Collection<String> forceRetranslation = Arrays.asList(args).subList(1, args.length);
 
-    DirectoryStream.Filter<Path> filter = new DirectoryStream.Filter<Path>() {
-      @Override
-      public boolean accept(Path entry) {
-        return Files.isDirectory(entry) && !Files.isSymbolicLink(entry) &&
-            VALUES_DIR_PATTERN.matcher(entry.getFileName().toString()).matches();
+    File[] translatedValuesDirs = resDir.listFiles(new FileFilter() {
+
+        @Override
+        public boolean accept(File file) {
+            return file.isDirectory() && VALUES_DIR_PATTERN.matcher(file.getName()).matches();
+              }
+    });
+      for (File translatedValuesDir : translatedValuesDirs) {
+          File translatedStringsFile = new File(translatedValuesDir, "strings.xml");
+          translate(stringsFile, translatedStringsFile, forceRetranslation);
       }
-    };
-    DirectoryStream<Path> dirs = null;
-    try {
-      dirs = Files.newDirectoryStream(resDir, filter);
-      for (Path dir : dirs) {
-        translate(stringsFile, dir.resolve("strings.xml"), forceRetranslation);
-      }
-    } finally {
-      if (dirs != null) {
-        dirs.close();
-      }
-    }
   }
 
-  private static void translate(Path englishFile,
-                                Path translatedFile,
+  private static void translate(File englishFile,
+                                File translatedFile,
                                 Collection<String> forceRetranslation) throws IOException {
 
     Map<String, String> english = readLines(englishFile);
     Map<String,String> translated = readLines(translatedFile);
-    String parentName = translatedFile.getParent().getFileName().toString();
+    String parentName = translatedFile.getParentFile().getName();
 
     Matcher stringsFileNameMatcher = STRINGS_FILE_NAME_PATTERN.matcher(parentName);
     if (!stringsFileNameMatcher.find()) {
@@ -135,12 +130,13 @@ public final class StringsResourceTranslator {
 
     System.out.println("Translating " + language);
 
-    Path resultTempFile = Files.createTempFile(null, null);
-
+    File resultTempFile = File.createTempFile(parentName, ".xml");
+    resultTempFile.deleteOnExit();
+    
     boolean anyChange = false;
     Writer out = null;
     try {
-      out = Files.newBufferedWriter(resultTempFile, StandardCharsets.UTF_8);
+      out = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(resultTempFile), UTF8));
       out.write("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n");
       out.write(APACHE_2_LICENSE);
       out.write("<resources>\n");
@@ -179,9 +175,10 @@ public final class StringsResourceTranslator {
 
     if (anyChange) {
       System.out.println("  Writing translations");
-      Files.move(resultTempFile, translatedFile, StandardCopyOption.REPLACE_EXISTING);
+      translatedFile.delete();
+      resultTempFile.renameTo(translatedFile);
     } else {
-      Files.delete(resultTempFile);
+      resultTempFile.delete();
     }
   }
 
@@ -222,7 +219,7 @@ public final class StringsResourceTranslator {
     StringBuilder translateResult = new StringBuilder(200);
     BufferedReader in = null;
     try {
-      in = new BufferedReader(new InputStreamReader(connection.getInputStream(), StandardCharsets.UTF_8));
+      in = new BufferedReader(new InputStreamReader(connection.getInputStream(), UTF8));
       char[] buffer = new char[8192];
       int charsRead;
       while ((charsRead = in.read(buffer)) > 0) {
@@ -236,19 +233,28 @@ public final class StringsResourceTranslator {
     return translateResult;
   }
 
-  private static Map<String,String> readLines(Path file) throws IOException {
-    if (Files.exists(file)) {
-      Map<String,String> entries = new TreeMap<String,String>();
-      for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
-        Matcher m = ENTRY_PATTERN.matcher(line);
-        if (m.find()) {
-          entries.put(m.group(1), m.group(2));
+    private static Map<String, String> readLines(File file) throws IOException {
+        if (file.exists()) {
+            Map<String, String> entries = new TreeMap<String, String>();
+            CharSequence line;
+            BufferedReader reader = null;
+            try {
+                reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), UTF8));
+                while ((line = reader.readLine()) != null) {
+                    Matcher m = ENTRY_PATTERN.matcher(line);
+                    if (m.find()) {
+                        entries.put(m.group(1), m.group(2));
+                    }
+                }
+                return entries;
+            } finally {
+                if (reader != null) {
+                    reader.close();
+                }
+            }
+        } else {
+            return Collections.emptyMap();
         }
-      }
-      return entries;
-    } else {
-      return Collections.emptyMap();
     }
-  }
 
 }

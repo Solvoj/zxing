@@ -23,7 +23,6 @@ import java.io.File;
 import java.io.OutputStream;
 import java.io.IOException;
 import java.awt.image.BufferedImage;
-import java.nio.file.Path;
 
 /**
  * Writes a {@link BitMatrix} to {@link BufferedImage},
@@ -79,7 +78,7 @@ public final class MatrixToImageWriter {
    */
   @Deprecated
   public static void writeToFile(BitMatrix matrix, String format, File file) throws IOException {
-    writeToPath(matrix, format, file.toPath());
+    writeToPath(matrix, format, file);
   }
 
   /**
@@ -91,7 +90,7 @@ public final class MatrixToImageWriter {
    * @throws IOException if writes to the stream fail
    * @see #toBufferedImage(BitMatrix)
    */
-  public static void writeToPath(BitMatrix matrix, String format, Path file) throws IOException {
+  public static void writeToPath(BitMatrix matrix, String format, File file) throws IOException {
     writeToPath(matrix, format, file, DEFAULT_CONFIG);
   }
 
@@ -106,7 +105,7 @@ public final class MatrixToImageWriter {
   @Deprecated
   public static void writeToFile(BitMatrix matrix, String format, File file, MatrixToImageConfig config) 
       throws IOException {
-    writeToPath(matrix, format, file.toPath(), config);
+    writeToPath(matrix, format, file, config);
   }
 
   /**
@@ -118,11 +117,11 @@ public final class MatrixToImageWriter {
    * @param config output configuration
    * @throws IOException if writes to the file fail
    */
-  public static void writeToPath(BitMatrix matrix, String format, Path file, MatrixToImageConfig config)
+  public static void writeToPath(BitMatrix matrix, String format, File file, MatrixToImageConfig config)
       throws IOException {
     BufferedImage image = toBufferedImage(matrix, config);
-    if (!ImageIO.write(image, format, file.toFile())) {
-      throw new IOException("Could not write an image of format " + format + " to " + file);
+    if (!ImageIO.write(image, format, file)) {
+      throw new IOException("Could not write an image of format " + format + " to " + file.getName());
     }
   }
 

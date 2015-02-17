@@ -17,18 +17,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   
-  <artifactId>zxingorg</artifactId>
-  <version>3.2.1-Java6-SNAPSHOT</version>
+  <artifactId>zxingorg-java6</artifactId>
+  <version>3.2.0</version>
   <packaging>war</packaging>
 
   <dependencies>
     <dependency>
       <groupId>com.google.zxing</groupId>
-      <artifactId>core</artifactId>
+      <artifactId>core-java6</artifactId>
+      <version>3.2.0</version>
     </dependency>
     <dependency>
       <groupId>com.google.zxing</groupId>
-      <artifactId>javase</artifactId>
+      <artifactId>javase-java6</artifactId>
+      <version>3.2.0</version>
     </dependency>
     <dependency>
       <groupId>javax</groupId>
@@ -44,8 +46,8 @@
 
   <parent>
     <groupId>com.google.zxing</groupId>
-    <artifactId>zxing-parent</artifactId>
-    <version>3.2.1-Java6-SNAPSHOT</version>
+    <artifactId>zxing-parent-java6</artifactId>
+    <version>3.2.0</version>
   </parent>
   
   <build>

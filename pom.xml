@@ -18,8 +18,8 @@
   <modelVersion>4.0.0</modelVersion>
   
   <groupId>com.google.zxing</groupId>
-  <artifactId>zxing-parent</artifactId>
-  <version>3.2.1-Java6-SNAPSHOT</version>
+  <artifactId>zxing-parent-java6</artifactId>
+  <version>3.2.0</version>
   <packaging>pom</packaging>
   
   <dependencyManagement>
@@ -106,7 +106,7 @@
     <java.version>1.6</java.version>
     <slf4j.version>1.7.10</slf4j.version>
     <!-- This can't reference project.version as some subprojects version differently -->
-    <zxing.version>3.2.1-Java6-SNAPSHOT</zxing.version>
+    <zxing.version>3.2.0</zxing.version>
   </properties>
 
   <build>
