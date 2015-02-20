@@ -17,7 +17,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   
-  <groupId>com.google.zxing</groupId>
+  <groupId>com.solvoj.zxing-java6</groupId>
   <artifactId>zxing-parent-java6</artifactId>
   <version>3.2.0</version>
   <packaging>pom</packaging>
@@ -63,23 +63,23 @@
         <scope>provided</scope>
       </dependency>
       <dependency>
-        <groupId>com.google.zxing</groupId>
-        <artifactId>core</artifactId>
+        <groupId>com.solvoj.zxing-java6</groupId>
+        <artifactId>core-java6</artifactId>
         <version>${zxing.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.zxing</groupId>
-        <artifactId>android-core</artifactId>
+        <groupId>com.solvoj.zxing-java6</groupId>
+        <artifactId>android-core-java6</artifactId>
         <version>${zxing.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.zxing</groupId>
-        <artifactId>android-integration</artifactId>
+        <groupId>com.solvoj.zxing-java6</groupId>
+        <artifactId>android-integration-java6</artifactId>
         <version>${zxing.version}</version>
       </dependency>
       <dependency>
-        <groupId>com.google.zxing</groupId>
-        <artifactId>javase</artifactId>
+        <groupId>com.solvoj.zxing-java6</groupId>
+        <artifactId>javase-java6</artifactId>
         <version>${zxing.version}</version>
       </dependency>
       <dependency>
@@ -280,7 +280,7 @@
           </dependencies>
           <configuration>
             <mavenExecutorId>forked-path</mavenExecutorId>
-            <tagNameFormat>zxing-@{project.version}</tagNameFormat>
+            <tagNameFormat>zxing-java6-@{project.version}</tagNameFormat>
             <releaseProfiles>release</releaseProfiles>
             <goals>deploy</goals>
           </configuration>
@@ -546,9 +546,9 @@
   </reporting>
 
   <name>ZXing</name>
-  <description>Parent Maven project for ZXing modules</description>
-  <url>http://github.com/zxing/zxing</url>
-  <inceptionYear>2007</inceptionYear>
+  <description>Parent Maven project for ZXing for Java 6 modules</description>
+  <url>http://github.com/Solvoj/zxing</url>
+  <inceptionYear>2015</inceptionYear>
   <licenses>
     <license>
       <name>The Apache Software License, Version 2.0</name>
@@ -564,22 +564,18 @@
 
   <issueManagement>
     <system>Github</system>
-    <url>https://github.com/zxing/zxing/issues</url>
+    <url>https://github.com/Solvoj/zxing/issues</url>
   </issueManagement>
   <mailingLists>
-    <mailingList>
-      <name>zxing Google Group</name>
-      <archive>https://groups.google.com/forum/?fromgroups#!forum/zxing</archive>
-    </mailingList>
     <mailingList>
       <name>StackOverflow tag</name>
       <archive>http://stackoverflow.com/questions/tagged/zxing</archive>
     </mailingList>
   </mailingLists>
   <scm>
-    <connection>scm:git:https://github.com/zxing/zxing.git</connection>
-    <developerConnection>scm:git:https://github.com/zxing/zxing.git</developerConnection>
-    <url>scm:git:https://github.com/zxing/zxing.git</url>
+    <connection>scm:git:https://github.com/Solvoj/zxing.git</connection>
+    <developerConnection>scm:git:https://github.com/Solvoj/zxing.git</developerConnection>
+    <url>scm:git:https://github.com/Solvoj/zxing.git</url>
     <tag>HEAD</tag>
   </scm>
 
@@ -598,11 +594,6 @@
       <name>Sonatype Nexus Snapshots</name>
       <url>https://oss.sonatype.org/content/repositories/snapshots/</url>
     </snapshotRepository>
-    <site>
-      <id>zxing.website</id>
-      <name>ZXing documentation</name>
-      <url>http://zxing.github.io/zxing/</url>
-    </site>
   </distributionManagement>
 
   <profiles>
