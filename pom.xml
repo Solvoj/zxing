@@ -51,11 +51,6 @@
 	<artifactId>guava-io</artifactId>
 	<version>r03</version>
       </dependency>
-<!--      <dependency>
-        <groupId>org.kie.commons</groupId>
-        <artifactId>kie-nio2-backport</artifactId>
-        <version>6.0.0.CR5</version>
-      </dependency>-->
       <dependency>
         <groupId>com.google.android</groupId>
         <artifactId>android</artifactId>
