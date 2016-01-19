@@ -33,11 +33,12 @@ public final class OpenCameraInterface {
    * Opens the requested camera with {@link Camera#open(int)}, if one exists.
    *
    * @param cameraId camera ID of the camera to use. A negative value
-   *  or {@link #NO_REQUESTED_CAMERA} means "no preference"
-   * @return handle to {@link Camera} that was opened
+   *  or {@link #NO_REQUESTED_CAMERA} means "no preference", in which case a rear-facing
+   *  camera is returned if possible or else any camera
+   * @return handle to {@link OpenCamera} that was opened
    */
-  public static Camera open(int cameraId) {
-    
+  public static OpenCamera open(int cameraId) {
+
     int numCameras = Camera.getNumberOfCameras();
     if (numCameras == 0) {
       Log.w(TAG, "No cameras!");
@@ -46,36 +47,49 @@ public final class OpenCameraInterface {
 
     boolean explicitRequest = cameraId >= 0;
 
-    if (!explicitRequest) {
-      // Select a camera if no explicit camera requested
-      int index = 0;
+    Camera.CameraInfo selectedCameraInfo = null;
+    int index;
+    if (explicitRequest) {
+      index = cameraId;
+      selectedCameraInfo = new Camera.CameraInfo();
+      Camera.getCameraInfo(index, selectedCameraInfo);
+    } else {
+      index = 0;
       while (index < numCameras) {
         Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
         Camera.getCameraInfo(index, cameraInfo);
-        if (cameraInfo.facing == Camera.CameraInfo.CAMERA_FACING_BACK) {
+        CameraFacing reportedFacing = CameraFacing.values()[cameraInfo.facing];
+        if (reportedFacing == CameraFacing.BACK) {
+          selectedCameraInfo = cameraInfo;
           break;
         }
         index++;
       }
-      
-      cameraId = index;
     }
 
     Camera camera;
-    if (cameraId < numCameras) {
-      Log.i(TAG, "Opening camera #" + cameraId);
-      camera = Camera.open(cameraId);
+    if (index < numCameras) {
+      Log.i(TAG, "Opening camera #" + index);
+      camera = Camera.open(index);
     } else {
       if (explicitRequest) {
         Log.w(TAG, "Requested camera does not exist: " + cameraId);
         camera = null;
       } else {
-        Log.i(TAG, "No camera facing back; returning camera #0");
+        Log.i(TAG, "No camera facing " + CameraFacing.BACK + "; returning camera #0");
         camera = Camera.open(0);
+        selectedCameraInfo = new Camera.CameraInfo();
+        Camera.getCameraInfo(0, selectedCameraInfo);
       }
     }
-    
-    return camera;
+
+    if (camera == null) {
+      return null;
+    }
+    return new OpenCamera(index,
+                          camera,
+                          CameraFacing.values()[selectedCameraInfo.facing],
+                          selectedCameraInfo.orientation);
   }
-  
+
 }
