@@ -22,13 +22,13 @@ import org.junit.Assert;
 import org.junit.Test;
 
 /**
- * Tests {@link com.google.zxing.client.result.GeoParsedResult}.
+ * Tests {@link GeoParsedResult}.
  *
  * @author Sean Owen
  */
 public final class GeoParsedResultTestCase extends Assert {
 
-  private static final double EPSILON = 0.0000000001;
+  private static final double EPSILON = 1.0E-10;
 
   @Test
   public void testGeo() {

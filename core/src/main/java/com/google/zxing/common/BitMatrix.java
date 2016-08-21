@@ -102,7 +102,7 @@ public final class BitMatrix implements Cloneable {
 
     // no EOL at end?
     if (bitsPos > rowStartPos) {
-      if(rowLength == -1) {
+      if (rowLength == -1) {
         rowLength = bitsPos - rowStartPos;
       } else if (bitsPos - rowStartPos != rowLength) {
         throw new IllegalArgumentException("row lengths do not match");
@@ -254,7 +254,7 @@ public final class BitMatrix implements Cloneable {
     int height = getHeight();
     BitArray topRow = new BitArray(width);
     BitArray bottomRow = new BitArray(width);
-    for (int i = 0; i < (height+1) / 2; i++) {
+    for (int i = 0; i < (height + 1) / 2; i++) {
       topRow = getRow(i, topRow);
       bottomRow = getRow(height - 1 - i, bottomRow);
       topRow.reverse();
@@ -335,7 +335,7 @@ public final class BitMatrix implements Cloneable {
 
     int theBits = bits[bitsOffset];
     int bit = 0;
-    while ((theBits << (31-bit)) == 0) {
+    while ((theBits << (31 - bit)) == 0) {
       bit++;
     }
     x += bit;
@@ -419,7 +419,7 @@ public final class BitMatrix implements Cloneable {
    * @return string representation of entire matrix utilizing given strings
    */
   public String toString(String setString, String unsetString) {
-    return toString(setString, unsetString, "\n");
+    return buildToString(setString, unsetString, "\n");
   }
 
   /**
@@ -431,6 +431,10 @@ public final class BitMatrix implements Cloneable {
    */
   @Deprecated
   public String toString(String setString, String unsetString, String lineSeparator) {
+    return buildToString(setString, unsetString, lineSeparator);
+  }
+
+  private String buildToString(String setString, String unsetString, String lineSeparator) {
     StringBuilder result = new StringBuilder(height * (width + 1));
     for (int y = 0; y < height; y++) {
       for (int x = 0; x < width; x++) {

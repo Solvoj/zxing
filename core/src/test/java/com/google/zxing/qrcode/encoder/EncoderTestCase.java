@@ -22,6 +22,7 @@ import com.google.zxing.common.BitArray;
 import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 import com.google.zxing.qrcode.decoder.Mode;
 import com.google.zxing.qrcode.decoder.Version;
+
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -125,6 +126,21 @@ public final class EncoderTestCase extends Assert {
           " 1 1 1 1 1 1 1 0 0 0 1 0 0 1 0 0 0 0 1 1 1\n" +
           ">>\n";
     assertEquals(expected, qrCode.toString());
+  }
+  
+  @Test
+  public void testEncodeWithVersion() throws WriterException {
+    Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);
+    hints.put(EncodeHintType.QR_VERSION, 7);
+    QRCode qrCode = Encoder.encode("ABCDEF", ErrorCorrectionLevel.H, hints);
+    assertTrue(qrCode.toString().contains(" version: 7\n"));
+  }
+  
+  @Test(expected = WriterException.class)
+  public void testEncodeWithVersionTooSmall() throws WriterException {
+    Map<EncodeHintType, Object> hints = new EnumMap<>(EncodeHintType.class);
+    hints.put(EncodeHintType.QR_VERSION, 3);
+    Encoder.encode("THISMESSAGEISTOOLONGFORAQRCODEVERSION3", ErrorCorrectionLevel.H, hints);
   }
 
   @Test

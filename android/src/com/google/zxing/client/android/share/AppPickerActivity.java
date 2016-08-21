@@ -19,13 +19,15 @@ package com.google.zxing.client.android.share;
 import android.app.ListActivity;
 import android.content.Intent;
 import android.os.AsyncTask;
-import android.provider.Browser;
 import android.view.View;
 import android.widget.Adapter;
 import android.widget.ListView;
 
 import java.util.List;
 
+/**
+ * Activity for picking an installed application to share via Intent.
+ */
 public final class AppPickerActivity extends ListActivity {
 
   private AsyncTask<Object,Object,List<AppInfo>> backgroundTask;
@@ -54,7 +56,7 @@ public final class AppPickerActivity extends ListActivity {
       String packageName = ((AppInfo) adapter.getItem(position)).getPackageName();
       Intent intent = new Intent();
       intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
-      intent.putExtra(Browser.BookmarkColumns.URL, "market://details?id=" + packageName);
+      intent.putExtra("url", "market://details?id=" + packageName); // Browser.BookmarkColumns.URL
       setResult(RESULT_OK, intent);
     } else {
       setResult(RESULT_CANCELED);      

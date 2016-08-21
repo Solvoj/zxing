@@ -45,6 +45,7 @@ import java.util.regex.Pattern;
 public final class EncoderTest extends Assert {
 
   private static final Pattern DOTX = Pattern.compile("[^.X]");
+  private static final Pattern SPACES = Pattern.compile("\\s+");
   private static final ResultPoint[] NO_POINTS = new ResultPoint[0];
 
   // real life tests
@@ -399,12 +400,16 @@ public final class EncoderTest extends Assert {
     try {
       Encoder.encode(alphabet, 25, 33);
       fail("Encode should have failed.  No such thing as 33 layers");
-    } catch (IllegalArgumentException expected) {}
+    } catch (IllegalArgumentException expected) {
+      // continue
+    }
 
     try {
       Encoder.encode(alphabet, 25, -1);
       fail("Encode should have failed.  Text can't fit in 1-layer compact");
-    } catch (IllegalArgumentException expected) {}
+    } catch (IllegalArgumentException expected) {
+      // continue
+    }
   }
 
   @Test
@@ -418,7 +423,9 @@ public final class EncoderTest extends Assert {
     try {
       Encoder.encode(data, 0, -4);
       fail("Encode should have failed.  Text can't fit in 1-layer compact");
-    } catch (IllegalArgumentException expected) {}
+    } catch (IllegalArgumentException expected) {
+      // continue
+    }
 
     // If we just try to encode it normally, it will go to a non-compact 4 layer
     AztecCode aztecCode = Encoder.encode(data, 0, Encoder.DEFAULT_AZTEC_LAYERS);
@@ -509,15 +516,14 @@ public final class EncoderTest extends Assert {
 
   private static void testModeMessage(boolean compact, int layers, int words, String expected) {
     BitArray in = Encoder.generateModeMessage(compact, layers, words);
-    assertEquals("generateModeMessage() failed", expected.replace(" ", ""), in.toString().replace(" ", ""));
+    assertEquals("generateModeMessage() failed", stripSpace(expected), stripSpace(in.toString()));
   }
 
   private static void testStuffBits(int wordSize, String bits, String expected) {
     BitArray in = toBitArray(bits);
     BitArray stuffed = Encoder.stuffBits(in, wordSize);
     assertEquals("stuffBits() failed for input string: " + bits, 
-                 expected.replace(" ", ""), 
-                 stuffed.toString().replace(" ", ""));
+                 stripSpace(expected), stripSpace(stuffed.toString()));
   }
 
   private static BitArray toBitArray(CharSequence bits) {
@@ -539,16 +545,21 @@ public final class EncoderTest extends Assert {
 
   private static void testHighLevelEncodeString(String s, String expectedBits) {
     BitArray bits = new HighLevelEncoder(s.getBytes(StandardCharsets.ISO_8859_1)).encode();
-    String receivedBits = bits.toString().replace(" ", "");
-    assertEquals("highLevelEncode() failed for input string: " + s, expectedBits.replace(" ", ""), receivedBits);
+    String receivedBits = stripSpace(bits.toString());
+    assertEquals("highLevelEncode() failed for input string: " + s, stripSpace(expectedBits), receivedBits);
     assertEquals(s, Decoder.highLevelDecode(toBooleanArray(bits)));
   }
 
   private static void testHighLevelEncodeString(String s, int expectedReceivedBits) {
     BitArray bits = new HighLevelEncoder(s.getBytes(StandardCharsets.ISO_8859_1)).encode();
-    int receivedBitCount = bits.toString().replace(" ", "").length();
+    int receivedBitCount = stripSpace(bits.toString()).length();
     assertEquals("highLevelEncode() failed for input string: " + s, 
                  expectedReceivedBits, receivedBitCount);
     assertEquals(s, Decoder.highLevelDecode(toBooleanArray(bits)));
   }
+
+  private static String stripSpace(String s) {
+    return SPACES.matcher(s).replaceAll("");
+  }
+
 }

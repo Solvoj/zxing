@@ -80,20 +80,20 @@ import javax.servlet.http.Part;
  * @author Sean Owen
  */
 @MultipartConfig(
-    maxFileSize = 10_000_000,
-    maxRequestSize = 10_000_000,
-    fileSizeThreshold = 1_000_000,
+    maxFileSize = 1L << 26, // ~64MB
+    maxRequestSize = 1L << 26, // ~64MB
+    fileSizeThreshold = 1 << 20, // ~1MB
     location = "/tmp")
 @WebServlet(value = "/w/decode", loadOnStartup = 1)
 public final class DecodeServlet extends HttpServlet {
 
   private static final Logger log = Logger.getLogger(DecodeServlet.class.getName());
 
-  // No real reason to let people upload more than a 10MB image
-  private static final long MAX_IMAGE_SIZE = 10_000_000L;
-  // No real reason to deal with more than maybe 10 megapixels
-  private static final int MAX_PIXELS = 10_000_000;
-  private static final byte[] REMAINDER_BUFFER = new byte[32768];
+  // No real reason to let people upload more than ~64MB
+  private static final long MAX_IMAGE_SIZE = 1L << 26;
+  // No real reason to deal with more than ~64 megapixels
+  private static final int MAX_PIXELS = 1 << 26;
+  private static final byte[] REMAINDER_BUFFER = new byte[1 << 16];
   private static final Map<DecodeHintType,Object> HINTS;
   private static final Map<DecodeHintType,Object> HINTS_PURE;
 
@@ -244,9 +244,8 @@ public final class DecodeServlet extends HttpServlet {
 
   private static void consumeRemainder(InputStream is) {
     try {
-      int available;
-      while ((available = is.available()) > 0) {
-        is.read(REMAINDER_BUFFER, 0, available); // don't care about value, or collision
+      while (is.read(REMAINDER_BUFFER) > 0) {
+        // don't care about value, or collision
       }
     } catch (IOException | IndexOutOfBoundsException ioe) {
       // sun.net.www.http.ChunkedInputStream.read is throwing IndexOutOfBoundsException
@@ -280,7 +279,7 @@ public final class DecodeServlet extends HttpServlet {
       log.info("File upload was not multipart");
       errorResponse(request, response, "badimage");
     } else {
-      log.info("Decoding uploaded file");
+      log.info("Decoding uploaded file " + fileUploadPart.getSubmittedFileName());
       try (InputStream is = fileUploadPart.getInputStream()) {
         processStream(is, request, response);
       }
@@ -378,10 +377,10 @@ public final class DecodeServlet extends HttpServlet {
         try {
           throw savedException == null ? NotFoundException.getNotFoundInstance() : savedException;
         } catch (FormatException | ChecksumException e) {
-          log.info(e.getMessage());
+          log.info(e.toString());
           errorResponse(request, response, "format");
         } catch (ReaderException e) { // Including NotFoundException
-          log.info(e.getMessage());
+          log.info(e.toString());
           errorResponse(request, response, "notfound");
         }
         return;

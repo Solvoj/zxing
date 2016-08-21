@@ -54,17 +54,13 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-war-plugin</artifactId>
         <configuration>
-          <warSourceDirectory>src/web</warSourceDirectory>
           <failOnMissingWebXml>false</failOnMissingWebXml>
         </configuration>
       </plugin>
       <plugin>
         <groupId>org.eclipse.jetty</groupId>
         <artifactId>jetty-maven-plugin</artifactId>
-        <version>9.3.6.v20151106</version>
-        <configuration>
-          <webAppSourceDirectory>src/web</webAppSourceDirectory>
-        </configuration>
+        <version>9.4.0.M0</version>
       </plugin>
     </plugins>
   </build>

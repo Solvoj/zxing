@@ -21,7 +21,6 @@ import com.beust.jcommander.validators.PositiveInteger;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.DecodeHintType;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -35,8 +34,8 @@ final class DecoderConfig {
       description = "Use the TRY_HARDER hint, default is normal mode")
   boolean tryHarder;
 
-  @Parameter(names="--pure_barcode",
-      description="Input image is a pure monochrome barcode image, not a photo")
+  @Parameter(names = "--pure_barcode",
+      description = "Input image is a pure monochrome barcode image, not a photo")
   boolean pureBarcode;
 
   @Parameter(names = "--products_only",
@@ -80,7 +79,7 @@ final class DecoderConfig {
   boolean help;
 
   @Parameter(description = "(URIs to decode)", required = true, variableArity = true)
-  List<URI> inputPaths;
+  List<String> inputPaths;
 
   Map<DecodeHintType,?> buildHints() {
     List<BarcodeFormat> finalPossibleFormats = possibleFormats;
